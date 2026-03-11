@@ -307,16 +307,54 @@
 <body>
 
 <!-- HEADER -->
-<header>
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: transparent;">
   <div class="header-cta">
-    <img src="/streetonline-logo.png" alt="StreetOnline Logo" class="logo-img">
+    <img src="/streetonline-logo.png" alt="StreetOnline Logo" class="logo-img" style="height: 40px; display: block;">
   </div>
 
-  <div class="visitor-counter">
+  <div class="visitor-counter" style="font-family: sans-serif; font-size: 14px; color: inherit;">
     <span>👥 Visitantes:</span>
-    <i id="visitor-count">0</i>
+    <strong id="visitor-count">0</strong>
   </div>
 </header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const visitEl = document.getElementById('visitor-count');
+    if (!visitEl) return;
+
+    // Defina aqui por onde o contador deve começar
+    const VALOR_INICIAL = 100; 
+    const STORAGE_KEY = 'streetonline_visitor_cache';
+    const PROJECT_NAME = 'streetonline_v1_oficial'; // Chave única para o servidor
+
+    function updateDisplay(value) {
+      visitEl.textContent = Number(value).toLocaleString('pt-BR');
+      localStorage.setItem(STORAGE_KEY, value);
+    }
+
+    // 1. Carrega o que estiver no cache imediatamente para não ficar vazio
+    const saved = localStorage.getItem(STORAGE_KEY);
+    updateDisplay(saved ? Number(saved) : VALOR_INICIAL);
+
+    // 2. Tenta buscar o valor real no servidor (MojoCounter - mais estável)
+    fetch(`https://counter.mojoauth.com/count/${PROJECT_NAME}/`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        if (data && data.value) {
+          // Soma o valor do servidor ao valor inicial para manter a consistência
+          const finalCount = VALOR_INICIAL + Number(data.value);
+          updateDisplay(finalCount);
+        }
+      })
+      .catch(() => {
+        console.log('Servidor offline, mantendo cache local.');
+        // Opcional: Simular um pequeno aumento mesmo offline
+        const simulated = (Number(localStorage.getItem(STORAGE_KEY)) || VALOR_INICIAL) + 1;
+        updateDisplay(simulated);
+      });
+  });
+</script>
 
 <!-- HERO -->
 <section class="hero">
